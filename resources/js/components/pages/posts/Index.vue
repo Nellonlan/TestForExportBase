@@ -175,4 +175,11 @@ export default {
     font-size: 25px;
     font-weight: bold;
 }
+.addreview__name, .addreview__btn {
+    margin-left: 10px;
+}
+.addreview__btn button {
+    padding: 5px;
+    border-radius: 10px;
+} 
 </style>
