@@ -27,22 +27,30 @@
 
         <validation-errors v-if="validationErrors" :errors="validationErrors">
         </validation-errors>
-        <form @submit.prevent="addPost" class="addreview">
+        <form @submit.prevent="addPost" class="addreview" :class="{form_inv: formInv}">
             <div class="addreview__name">
                 <input v-model="post.title" type="text" name="name" placeholder="Имя и Фамилия">
             </div>
             <div class="addreview__text">
                 <textarea v-model="post.description" name="review" id="" cols="30" rows="10" placeholder="Комментарий"></textarea>
             </div>
-            <div class="addreview__btn">
-                <button>Добавить комментарий</button>
+            <div class="addreview__btn" :class="{recaptcha_failed: !recaptcha}">
+                <small>Капча не выполнена!</small>
+                <vue-recaptcha class="addreview__captcha" sitekey="6LehcbwfAAAAAD5K8c1EcbNgnljr6zp_XyCD5y09" @verify="mxVerify"></vue-recaptcha>
+                <button>
+                    Добавить комментарий
+                </button>
             </div>
         </form>
     </div>
 </template>
 
 <script>
+import {VueRecaptcha} from 'vue-recaptcha';
 export default {
+    components: {
+        VueRecaptcha
+    },
     data() {
         return {
             posts: [],
@@ -55,13 +63,19 @@ export default {
             edit: false,
             loading: true,
             errored: false,
-            validationErrors: ''
+            validationErrors: '',
+            recaptcha: null,
+            formInv: false
         }
     },
     mounted() {
         this.getPosts()
     },
     methods: {
+        mxVerify(response) {
+            this.recaptcha = response
+            this.formInv = false
+        },
         getPosts() {
             axios
                 .get('/api/posts')
@@ -82,23 +96,28 @@ export default {
                 .catch(error => console.log(error))
         },
         addPost() {
-            axios
-                .post('/api/posts', {
-                    title: this.post.title,
-                    description: this.post.description,
-                })
-                .then(response => {
-                    this.post.title = ''
-                    this.post.description = ''
-                    this.getPosts()
-                    console.log(response)
-                    this.validationErrors = ''
-                })
-                .catch(error => {
-                    if (error.response.status === 422) {
-                        this.validationErrors = error.response.data.errors
-                    }
-                })
+            console.log(this.recaptcha);
+            if(this.recaptcha != null) {
+                axios
+                    .post('/api/posts', {
+                        title: this.post.title,
+                        description: this.post.description,
+                    })
+                    .then(response => {
+                        this.post.title = ''
+                        this.post.description = ''
+                        this.getPosts() 
+                        console.log(response)
+                        this.validationErrors = ''
+                    })
+                    .catch(error => {
+                        if (error.response.status === 422) {
+                            this.validationErrors = error.response.data.errors
+                        }
+                    })
+            } else {
+                this.formInv = true;
+            }
         }   
     },
 }
@@ -179,7 +198,20 @@ export default {
     margin-left: 10px;
 }
 .addreview__btn button {
-    padding: 5px;
     border-radius: 10px;
-} 
+    padding: 5px;
+    margin-top: 5px;
+}
+.addreview__btn small {
+    color: red;
+    font-weight: bold;
+    margin-left: 5px;
+    display: none;
+}
+.addreview__captcha {
+    display: none;
+}
+.form_inv .addreview__btn small, .recaptcha_failed .addreview__captcha {
+    display: block;
+}
 </style>
