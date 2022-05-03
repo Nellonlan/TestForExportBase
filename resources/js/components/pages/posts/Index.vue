@@ -208,10 +208,7 @@ export default {
     margin-left: 5px;
     display: none;
 }
-.addreview__captcha {
-    display: none;
-}
-.form_inv .addreview__btn small, .recaptcha_failed .addreview__captcha {
+.form_inv .addreview__btn small {
     display: block;
 }
 </style>
